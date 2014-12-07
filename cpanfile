@@ -1,3 +1,5 @@
+requires 'Data::Dumper';
+requires 'IO::Socket::SSL';
 requires 'Mojo::UserAgent';
 requires 'Moose';
 requires 'Moose::Role';
