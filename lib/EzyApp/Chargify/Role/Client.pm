@@ -2,7 +2,7 @@ package EzyApp::Chargify::Role::Client;
 use Moose::Role;
 
 use Mojo::UserAgent;
-
+use Data::Dumper 'Dumper';
 
 has site_id => (
     is => 'ro',
