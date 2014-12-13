@@ -9,7 +9,7 @@ with
 sub fetch{
     my ($self, $product_family_id) = @_;
 
-    my $url = $self->fetch_url($product_family_id);
+    my $url = $self->_fetch_url($product_family_id);
     my $res = $self->user_agent->get($url)->res;
     $self->debug("Components Fetch Message: ".$res->message."\n");
 
@@ -18,7 +18,7 @@ sub fetch{
     return $res->json();
 }
 
-sub fetch_url{
+sub _fetch_url{
     my ($self, $product_family_id) = @_;
     my $url = $self->base_url;
     $url .= sprintf '/product_families/%s/components.json', $product_family_id;

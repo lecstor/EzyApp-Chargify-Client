@@ -9,7 +9,7 @@ with
 sub fetch{
     my ($self) = @_;
 
-    my $url = $self->fetch_url();
+    my $url = $self->_fetch_url();
     my $res = $self->user_agent->get($url)->res;
     $self->debug("Products Fetch Message: ".$res->message."\n");
 
@@ -18,7 +18,7 @@ sub fetch{
     return $res->json();
 }
 
-sub fetch_url{
+sub _fetch_url{
     my ($self) = @_;
     my $url = $self->base_url;
     $url .= sprintf '/products.json';

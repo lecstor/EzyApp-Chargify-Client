@@ -24,11 +24,11 @@ sub fetch{
     my $direction = $args{direction} || 'asc';
     my $limit = $args{limit} || 50;
 
-    my $url = $self->fetch_url($direction, $limit, $args{since_event}, $args{until_event});
+    my $url = $self->_fetch_url($direction, $limit, $args{since_event}, $args{until_event});
 
     my $res;
     foreach my $try (1..3){
-        $res = $self->try_fetch($url, $try);
+        $res = $self->_try_fetch($url, $try);
         last if $res;
         $self->debug($res);
         if ($try < 3){
@@ -44,7 +44,7 @@ sub fetch{
     return $res->json();
 }
 
-sub fetch_url{
+sub _fetch_url{
     my ($self, $direction, $limit, $since_event, $until_event) = @_;
     my $url = $self->base_url;
     $url .= sprintf '/events.json?direction=%s&per_page=%s', $direction, $limit;
@@ -54,7 +54,7 @@ sub fetch_url{
     return $url;
 }
 
-sub try_fetch{
+sub _try_fetch{
     my ($self, $url) = @_;
     my $res = $self->user_agent->get($url)->res;
     $self->debug("Events Fetch Message: ".$res->message."\n");

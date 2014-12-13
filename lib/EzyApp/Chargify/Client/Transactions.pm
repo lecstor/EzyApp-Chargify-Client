@@ -134,11 +134,11 @@ sub fetch{
     my $direction = $args{direction} || 'asc';
     my $limit = $args{limit} || 200;
 
-    my $url = $self->fetch_url($direction, $limit, $args{since_id}, $args{until_id});
+    my $url = $self->_fetch_url($direction, $limit, $args{since_id}, $args{until_id});
 
     my $res;
     foreach my $try (1..3){
-        $res = $self->try_fetch($url, $try);
+        $res = $self->_try_fetch($url, $try);
         last if $res;
         $self->debug($res);
         if ($try < 3){
@@ -154,7 +154,7 @@ sub fetch{
     return $res->json();
 }
 
-sub fetch_url{
+sub _fetch_url{
     my ($self, $direction, $limit, $since_id, $until_id) = @_;
     my $url = $self->base_url;
     #$url .= sprintf '/transactions.json?direction=%s&per_page=%s&kinds[]=charge&kinds[]=payment', $direction, $limit;
@@ -165,7 +165,7 @@ sub fetch_url{
     return $url;
 }
 
-sub try_fetch{
+sub _try_fetch{
     my ($self, $url) = @_;
     my $res = $self->user_agent->get($url)->res;
     $self->debug("Transactions Fetch Message: ".$res->message."\n");
