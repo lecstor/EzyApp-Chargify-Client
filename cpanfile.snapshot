@@ -87,6 +87,43 @@ DISTRIBUTIONS
       Sub::Install 0.921
       strict 0
       warnings 0
+  Devel-CallChecker-0.006
+    pathname: Z/ZE/ZEFRAM/Devel-CallChecker-0.006.tar.gz
+    provides:
+      Devel::CallChecker 0.006
+    requirements:
+      DynaLoader 0
+      DynaLoader::Functions 0.001
+      Exporter 0
+      ExtUtils::CBuilder 0.15
+      ExtUtils::ParseXS 0
+      File::Spec 0
+      IO::File 1.03
+      Module::Build 0
+      Test::More 0
+      parent 0
+      perl 5.006
+      strict 0
+      warnings 0
+  Devel-CallParser-0.002
+    pathname: Z/ZE/ZEFRAM/Devel-CallParser-0.002.tar.gz
+    provides:
+      Devel::CallParser 0.002
+    requirements:
+      Devel::CallChecker 0.002
+      DynaLoader 0
+      DynaLoader::Functions 0.001
+      Exporter 0
+      ExtUtils::CBuilder 0.15
+      ExtUtils::ParseXS 0
+      File::Spec 0
+      IO::File 1.03
+      Module::Build 0
+      Test::More 0
+      parent 0
+      perl 5.011002
+      strict 0
+      warnings 0
   Devel-Cover-1.17
     pathname: P/PJ/PJCJ/Devel-Cover-1.17.tar.gz
     provides:
@@ -216,6 +253,20 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.30
       Module::Runtime 0.009
       base 0
+      strict 0
+      warnings 0
+  DynaLoader-Functions-0.002
+    pathname: Z/ZE/ZEFRAM/DynaLoader-Functions-0.002.tar.gz
+    provides:
+      DynaLoader::Functions 0.002
+    requirements:
+      Carp 0
+      DynaLoader 0
+      Exporter 0
+      Module::Build 0
+      Test::More 0
+      parent 0
+      perl 5.006
       strict 0
       warnings 0
   Eval-Closure-0.11
@@ -1203,6 +1254,25 @@ DISTRIBUTIONS
       Algorithm::Diff 1.19
       Exporter 0
       ExtUtils::MakeMaker 0
+  Try-0.03
+    pathname: D/DO/DOY/Try-0.03.tar.gz
+    provides:
+      Error1 undef
+      Error2 undef
+      Try 0.03
+      inc::MakeMaker undef
+    requirements:
+      Devel::CallParser 0
+      Exporter 0
+      ExtUtils::MakeMaker 6.30
+      File::Find 0
+      File::Temp 0
+      Test::More 0.88
+      Try::Tiny 0
+      XSLoader 0
+      perl 5.014
+      strict 0
+      warnings 0
   Try-Tiny-0.22
     pathname: D/DO/DOY/Try-Tiny-0.22.tar.gz
     provides:

@@ -9,6 +9,7 @@ on 'test' => sub {
   requires 'Devel::Cover';
   requires 'Devel::NYTProf';
   requires 'Test::Exception';
+  requires 'Try';
 };
 
 
