@@ -48,7 +48,9 @@ sub get{
   my $self = shift;
   my $callback = pop if ref $_[-1] eq 'CODE';
   my ($url) = @_;
-  $self->tx->res->json->{_req} = { url => $url, method => 'GET' };
+  my $json = $self->tx->res->json;
+  $json->{_req} = { url => $url, method => 'GET' }
+    if $json && ref $json eq 'HASH' && exists $json->{_req};
   if ($callback){
     $callback->($self, $self->tx);
   } else {
@@ -60,7 +62,9 @@ sub post{
   my $self = shift;
   my $callback = pop if ref $_[-1] eq 'CODE';
   my ($url, $payload) = @_;
-  $self->tx->res->json->{_req} = { url => $url, method => 'POST' };
+  my $json = $self->tx->res->json;
+  $json->{_req} = { url => $url, method => 'POST' }
+    if $json && ref $json eq 'HASH' && exists $json->{_req};
   if ($callback){
     $callback->($self, $self->tx);
   } else {
