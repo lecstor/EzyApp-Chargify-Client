@@ -12,9 +12,9 @@ sub get{
 }
 
 sub post{
-  my ($self, $callback) = @_;
+  my ($self, $payload, $callback) = @_;
   my $url = $self->base_url;
-  return $self->_request('post', $url, { payload_key => 'value' }, $callback);
+  return $self->_request('post', $url, $payload, $callback);
 }
 
 no Moose;
@@ -34,17 +34,10 @@ use Try;
 
 use EzyApp::Test::UserAgent;
 
-my $api_key = 'bogus-api-key';
 
 # GET
 
-my $client = client(
-  EzyApp::Test::UserAgent->new(
-    res => EzyApp::Test::UserAgent::Res->new(
-      json => { key => 'value', _req => {} }
-    )
-  ),
-);
+my $client = client();
 ok $client, 'new client';
 
 # test coverage for debug
@@ -56,7 +49,6 @@ $client->debug_on(0);
 
 my $data = $client->get();
 ok $data, 'got data';
-is $data->{key}, 'value', 'data format';
 is $data->{_req}{method}, 'GET', 'request method';
 is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
 
@@ -64,7 +56,6 @@ $client->get(sub{
   my ($err, $data) = @_;
   ok !$err, 'get no error';
   ok $data, 'get data';
-  is $data->{key}, 'value', 'data format';
   is $data->{_req}{method}, 'GET', 'request method';
   is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
   Mojo::IOLoop->stop;
@@ -106,25 +97,21 @@ try{
 
 # POST
 
-$client = client(
-  EzyApp::Test::UserAgent->new(
-    res => EzyApp::Test::UserAgent::Res->new(
-      json => { key => 'value', _req => {} }
-    )
-  )
-);
+$client = client();
 
-$data = $client->post({ key => 'value' });
+my $payload = { key => 'value' };
+
+$data = $client->post($payload);
 ok $data, 'got data';
-is $data->{key}, 'value', 'data format';
+is_deeply $data->{_req}{payload}{json}, $payload, 'request json payload';
 is $data->{_req}{method}, 'POST', 'request method';
 is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
 
-$client->post(sub{
+$client->post($payload, sub{
   my ($err, $data) = @_;
   ok !$err, 'get no error';
   ok $data, 'get data';
-  is $data->{key}, 'value', 'data format';
+  is_deeply $data->{_req}{payload}{json}, $payload, 'request json payload';
   is $data->{_req}{method}, 'POST', 'request method';
   is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
   Mojo::IOLoop->stop;
@@ -139,11 +126,11 @@ done_testing();
 sub client{
   my ($useragent, $debug) = @_;
   Test::Client->new(
-    api_key => $api_key,
+    api_key => 'bogus-api-key',
     api_host => 'ezyapp.chargify.com',
     site_id => 'ea',
     ua_inactivity_timeout => 120,
     debug_on => $debug || 0,
-    user_agent => $useragent
+    user_agent => $useragent || EzyApp::Test::UserAgent->new
   );
 }
