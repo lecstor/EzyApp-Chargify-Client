@@ -41,7 +41,7 @@ my $api_key = 'bogus-api-key';
 my $client = client(
   EzyApp::Test::UserAgent->new(
     res => EzyApp::Test::UserAgent::Res->new(
-      json => { key => 'value' }
+      json => { key => 'value', _req => {} }
     )
   ),
 );
@@ -109,7 +109,7 @@ try{
 $client = client(
   EzyApp::Test::UserAgent->new(
     res => EzyApp::Test::UserAgent::Res->new(
-      json => { key => 'value' }
+      json => { key => 'value', _req => {} }
     )
   )
 );
