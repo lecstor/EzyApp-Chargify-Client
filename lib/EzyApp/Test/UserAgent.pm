@@ -63,7 +63,7 @@ sub post{
   my $callback = pop if ref $_[-1] eq 'CODE';
   my ($url, $payload) = @_;
   my $json = $self->tx->res->json;
-  $json->{_req} = { url => $url, method => 'POST' }
+  $json->{_req} = { url => $url, method => 'POST', payload => $payload }
     if $json && ref $json eq 'HASH' && exists $json->{_req};
   if ($callback){
     $callback->($self, $self->tx);
