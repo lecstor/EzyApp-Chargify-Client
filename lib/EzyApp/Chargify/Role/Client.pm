@@ -47,7 +47,7 @@ has base_url => (
 );
 
 has debug_on => (
-    is => 'ro',
+    is => 'rw',
     isa => 'Num',
     default => 0,
 );
@@ -55,6 +55,40 @@ has debug_on => (
 sub _builder_base_url{
     my ($self) = @_;
     return sprintf 'https://%s', $self->api_host;
+}
+
+=item _request
+
+  $ua->_request('get', $url);
+  $ua->_request('post', $url, { a => 'b' });
+  $ua->_request('post', $url, { a => 'b' });
+
+=cut
+
+sub _request{
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($method, $url, $payload) = @_;
+
+  my @args = ($url);
+  push(@args, { json => $payload }) if $payload;
+
+  if ($callback){
+    $self->user_agent->$method(@args, sub{
+      my ($ua, $tx) = @_;
+      $callback->($tx->error, $tx->res->json());
+    });
+  } else {
+    my $tx = $self->user_agent->$method(@args);
+    $self->debug($tx);
+    my $res = $tx->res;
+    if (my $err = $tx->error){
+      die "$err->{code} $err->{message}\n" if $err->{code};
+      die "Connection error: $err->{message}\n";
+    } else {
+      return $res->json();
+    }
+  }
 }
 
 sub debug{
