@@ -55,14 +55,13 @@ is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com/subscription
 # print Data::Dumper->Dumper($events);
 
 sub client{
-  my ($useragent, $api_key, $debug) = @_;
   EzyApp::Chargify::Client::Subscriptions->new(
-    api_key => $api_key || 'bogus-api-key',
+    api_key => 'bogus-api-key',
     api_host => 'ezyapp.chargify.com',
     site_id => 'ea',
     ua_inactivity_timeout => 120,
-    debug_on => $debug || 0,
-    user_agent => $useragent || EzyApp::Test::UserAgent->new
+    debug_on => 0,
+    user_agent => EzyApp::Test::UserAgent->new
   );
 }
 
