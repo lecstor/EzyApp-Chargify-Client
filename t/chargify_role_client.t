@@ -124,13 +124,14 @@ Mojo::IOLoop->start;
 done_testing();
 
 sub client{
-  my ($useragent, $debug) = @_;
+  my ($useragent) = @_;
+  $useragent = EzyApp::Test::UserAgent->new unless $useragent;
   Test::Client->new(
     api_key => 'bogus-api-key',
     api_host => 'ezyapp.chargify.com',
     site_id => 'ea',
     ua_inactivity_timeout => 120,
-    debug_on => $debug || 0,
-    user_agent => $useragent || EzyApp::Test::UserAgent->new
+    debug_on => 0,
+    user_agent => $useragent
   );
 }
