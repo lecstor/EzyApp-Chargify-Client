@@ -5,63 +5,35 @@ with
     'EzyApp::Chargify::Role::Client',
     'EzyApp::Chargify::Role::ClientBasicAuth';
 
-=item
+=item list
 
-    $events->fetch(
-        direction => 'asc',
-        limit => 50,
-        since_event => 54321,
-        until_event => 654321,
-    );
+  $events = $client->list();
 
-    Returns the json response body
+  $events = $client->list({
+    min_id => 54321, direction => 'asc',
+    limit => 30, page => 3
+  });
+
+  $client->list(
+    {
+      min_id => 54321, direction => 'asc',
+      limit => 30, page => 3
+    },
+    sub{ my ($err, data) = @_; }
+  );
 
 =cut
 
-sub fetch{
-    my ($self, %args) = @_;
-
-    my $direction = $args{direction} || 'asc';
-    my $limit = $args{limit} || 50;
-
-    my $url = $self->_fetch_url($direction, $limit, $args{since_event}, $args{until_event});
-
-    my $res;
-    foreach my $try (1..3){
-        $res = $self->_try_fetch($url, $try);
-        last if $res;
-        $self->debug($res);
-        if ($try < 3){
-            $self->debug("Events Fetch: sleep for 30 then try again..");
-            sleep(30);
-        } else {
-            $self->debug("Events Fetch: monumental fail!\n");
-        }
-    }
-
-    $self->response($res);
-
-    return $res->json();
+sub list{
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($options) = @_;
+  $options ||= {};
+  foreach (qw!page limit min_id max_id direction!){ $options->{$_} ||= '' };
+  my $url = $self->base_url. sprintf '/events.json?page=%s&per_page=%s&since_id=%s&max_id=%s&direction=%s',
+    $options->{page}, $options->{limit}, $options->{min_id}, $options->{max_id}, $options->{direction};
+  return $self->_request('get', $url, $callback);
 }
-
-sub _fetch_url{
-    my ($self, $direction, $limit, $since_event, $until_event) = @_;
-    my $url = $self->base_url;
-    $url .= sprintf '/events.json?direction=%s&per_page=%s', $direction, $limit;
-    $url .= '&since_id='.$since_event if $since_event;
-    $url .= '&max_id='.$until_event if $until_event;
-    $self->debug("chargify events fetch url: $url");
-    return $url;
-}
-
-sub _try_fetch{
-    my ($self, $url) = @_;
-    my $res = $self->user_agent->get($url)->res;
-    $self->debug("Events Fetch Message: ".$res->message."\n");
-    return $res if lc($res->message) eq 'ok';
-    return;
-}
-
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
