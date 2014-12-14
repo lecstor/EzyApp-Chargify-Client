@@ -4,11 +4,6 @@ use Moose::Role;
 use Mojo::UserAgent;
 use Data::Dumper 'Dumper';
 
-has site_id => (
-    is => 'ro',
-    isa => 'Str',
-);
-
 has api_key => (
     is => 'ro',
     isa => 'Str',

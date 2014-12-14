@@ -11,7 +11,6 @@ my $client = EzyApp::Chargify::Client->new(
   config => {
     api_key => 'bogus-api-key',
     api_host => 'ezyapp.chargify.com',
-    site_id => 'ea',
     ua_inactivity_timeout => 120,
     debug_on => 1,
   }
