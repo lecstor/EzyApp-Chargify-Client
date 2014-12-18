@@ -55,8 +55,8 @@ sub _builder_base_url{
 =item _request
 
   $ua->_request('get', $url);
-  $ua->_request('post', $url, { a => 'b' });
-  $ua->_request('post', $url, { a => 'b' });
+  $ua->_request('post', $url, { form => { a => 'b' } });
+  $ua->_request('post', $url, { json => { a => 'b' } });
 
 =cut
 
@@ -66,7 +66,9 @@ sub _request{
   my ($method, $url, $payload) = @_;
 
   my @args = ($url);
-  push(@args, { json => $payload }) if $payload;
+  push(@args, %$payload) if $payload;
+
+  $self->debug(['_request', $method, $url, $payload]);
 
   if ($callback){
     $self->user_agent->$method(@args, sub{
@@ -75,7 +77,6 @@ sub _request{
     });
   } else {
     my $tx = $self->user_agent->$method(@args);
-    $self->debug($tx);
     my $res = $tx->res;
     if (my $err = $tx->error){
       die "$err->{code} $err->{message}\n" if $err->{code};
