@@ -2,28 +2,32 @@ package EzyApp::Chargify::Client::Components;
 use Moose;
 
 with
-    'EzyApp::Chargify::Role::Client',
-    'EzyApp::Chargify::Role::ClientBasicAuth';
+  'EzyApp::Chargify::Role::Client',
+  'EzyApp::Chargify::Role::ClientBasicAuth';
 
+=item list
 
-sub fetch{
-    my ($self, $product_family_id) = @_;
+  $comps->list($product_family_id);
+  $comps->list($product_family_id, $include_archived);
+  $comps->list($product_family_id, $callback);
+  $comps->list($product_family_id, $include_archived, $callback);
 
-    my $url = $self->_fetch_url($product_family_id);
-    my $res = $self->user_agent->get($url)->res;
-    $self->debug("Components Fetch Message: ".$res->message."\n");
+=cut
 
-    $self->response($res);
+sub list{
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($product_family_id, $include_archived) = @_;
+  my $params = $include_archived ? { form => { include_archived => 1 }} : undef;
 
-    return $res->json();
-}
+  my $url = $self->base_url. sprintf '/product_families/%s/components.json', $product_family_id;
 
-sub _fetch_url{
-    my ($self, $product_family_id) = @_;
-    my $url = $self->base_url;
-    $url .= sprintf '/product_families/%s/components.json', $product_family_id;
-    $self->debug("chargify components fetch url: $url");
-    return $url;
+  return [map{ $_->{component} } @{$self->_request('get', $url, $params)}] unless $callback;
+
+  return $self->_request('get', $url, $params, sub{
+    my ($err, $list) = @_;
+    $callback->($err, $list ? [map{ $_->{component} } @$list] : undef);
+  });
 }
 
 

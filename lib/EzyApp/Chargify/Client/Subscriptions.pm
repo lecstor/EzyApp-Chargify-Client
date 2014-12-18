@@ -128,9 +128,17 @@ with
 =cut
 
 sub single{
-  my ($self, $id, $callback) = @_;
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($id) = @_;
   my $url = $self->base_url. sprintf "/subscriptions/$id.json";
-  return $self->_request('get', $url, $callback);
+
+  return $self->_request('get', $url)->{subscription} unless $callback;
+
+  return $self->_request('get', $url, sub{
+    my ($err, $sub) = @_;
+    $callback->($err, $sub ? $sub->{subscription} : undef);
+  });
 }
 
 =item list
@@ -141,11 +149,19 @@ sub single{
 =cut
 
 sub list{
-  my ($self, $page, $per_page, $callback) = @_;
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($page, $per_page) = @_;
   $page ||= 1;
   $per_page ||= 200;
   my $url = $self->base_url. sprintf '/subscriptions.json?page=%s&per_page=%s', $page, $per_page;
-  return $self->_request('get', $url, $callback);
+
+  return [map{ $_->{subscription} } @{$self->_request('get', $url)}] unless $callback;
+
+  return $self->_request('get', $url, sub{
+    my ($err, $list) = @_;
+    $callback->($err, $list ? [map{ $_->{subscription} } @$list] : undef);
+  });
 }
 
 =item components
@@ -153,11 +169,76 @@ sub list{
 =cut
 
 sub components{
-  my ($self, $id, $callback) = @_;
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($id) = @_;
   my $url = $self->base_url. sprintf "/subscriptions/$id/components.json";
-  return $self->_request('get', $url, $callback);
+
+  if ($callback){
+    return $self->_request('get', $url, sub{
+      my ($err, $list) = @_;
+      my $components = [map{ $_->{component} } @$list];
+      $_->{id} = delete($_->{component_id}) foreach @$components;
+      $callback->($err, $list ? $components : undef);
+    });
+
+  } else {
+    my $components = [map{ $_->{component} } @{$self->_request('get', $url)}];
+    $_->{id} = delete($_->{component_id}) foreach @$components;
+    return $components;
+
+  }
+
 }
 
+=item allocations
+
+  $allocs = $subs->allocations($sub_id, $component_id);
+
+  $allocs = $subs->allocations($sub_id, $component_id, $page);
+
+  $subs->allocations($sub_id, $component_id, $page, $callback);
+
+  $subs->allocations($sub_id, $component_id, $callback);
+
+=cut
+
+sub allocations{
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($id, $comp_id, $page) = @_;
+  my $url = $self->base_url. sprintf "/subscriptions/$id/components/$comp_id/allocations";
+
+  return [
+    map{ $_->{allocation} } @{$self->_request('get', $url, {form => {page => $page}}) }
+  ] unless $callback;
+
+  return $self->_request('get', $url, {form => {page => $page}}, sub{
+    my ($err, $list) = @_;
+    $callback->($err, $list ? [map{ $_->{allocation} } @$list] : undef);
+  });
+}
+
+=item events
+
+curl -G -u zTNKtWlZYgNkoMXKuq8:x -H Accept:application/json -H Content-Type:application/json \
+-d page=1 https://ezyapp.chargify.com/subscriptions//events.json
+
+=cut
+
+sub events{
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($id, $options) = @_;
+  my $url = $self->base_url. sprintf '/subscriptions/%s/events.json', $id;
+
+  return [map{ $_->{event} } @{$self->_request('get', $url, { form => $options })}] unless $callback;
+
+  return $self->_request('get', $url, { form => $options }, sub{
+    my ($err, $list) = @_;
+    $callback->($err, $list ? [map{ $_->{event} } @$list] : undef);
+  });
+}
 
 
 no Moose;
