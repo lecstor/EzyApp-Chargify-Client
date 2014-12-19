@@ -133,12 +133,16 @@ sub single{
   my ($id) = @_;
   my $url = $self->base_url. sprintf "/subscriptions/$id.json";
 
-  return $self->_request('get', $url)->{subscription} unless $callback;
+  if ($callback){
+    return $self->_request('get', $url, sub{
+      my ($err, $sub) = @_;
+      $callback->($err, $sub ? $sub->{subscription} : undef);
+    });
+  } else {
+    my $sub = $self->_request('get', $url);
+    return $sub ? $sub->{subscription} : undef;
+  }
 
-  return $self->_request('get', $url, sub{
-    my ($err, $sub) = @_;
-    $callback->($err, $sub ? $sub->{subscription} : undef);
-  });
 }
 
 =item list
@@ -156,12 +160,16 @@ sub list{
   $per_page ||= 200;
   my $url = $self->base_url. sprintf '/subscriptions.json?page=%s&per_page=%s', $page, $per_page;
 
-  return [map{ $_->{subscription} } @{$self->_request('get', $url)}] unless $callback;
-
-  return $self->_request('get', $url, sub{
-    my ($err, $list) = @_;
-    $callback->($err, $list ? [map{ $_->{subscription} } @$list] : undef);
-  });
+  if ($callback){
+    return $self->_request('get', $url, sub{
+      my ($err, $list) = @_;
+      $callback->($err, ($list && @$list) ? [map{ $_->{subscription} } @$list] : undef);
+    });
+  } else {
+    my $list = $self->_request('get', $url);
+    return unless $list && @$list;
+    return [map{ $_->{subscription} } @$list];
+  }
 }
 
 =item components
@@ -177,16 +185,24 @@ sub components{
   if ($callback){
     return $self->_request('get', $url, sub{
       my ($err, $list) = @_;
-      my $components = [map{ $_->{component} } @$list];
-      $_->{id} = delete($_->{component_id}) foreach @$components;
-      $callback->($err, $list ? $components : undef);
+      if ($list && @$list){
+        my $components = [map{ $_->{component} } @$list];
+        $_->{id} = delete $_->{component_id} foreach @$components;
+        $callback->($err, $components);
+      } else {
+        $callback->($err);
+      }
     });
 
   } else {
-    my $components = [map{ $_->{component} } @{$self->_request('get', $url)}];
-    $_->{id} = delete($_->{component_id}) foreach @$components;
-    return $components;
-
+    my $list = $self->_request('get', $url);
+    if ($list && @$list){
+      my $components = [map{ $_->{component} } @$list];
+      $_->{id} = delete $_->{component_id} foreach @$components;
+      return $components;
+    } else {
+      return;
+    }
   }
 
 }
