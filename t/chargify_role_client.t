@@ -43,21 +43,26 @@ ok $client, 'new client';
 # test coverage for debug
 $client->debug_on(1);
 $client->debug({ debug => 'ref' });
-$client->debug('debug string');
 $client->debug_on(0);
+$client->debug('debug string');
 
 
 my $data = $client->get();
 ok $data, 'got data';
-is $data->{_req}{method}, 'GET', 'request method';
-is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+my ($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+is $payload, undef, 'no payload';
+
 
 $client->get(sub{
   my ($err, $data) = @_;
   ok !$err, 'get no error';
   ok $data, 'get data';
-  is $data->{_req}{method}, 'GET', 'request method';
-  is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+  my ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+  is $payload, undef, 'no payload';
   Mojo::IOLoop->stop;
 });
 Mojo::IOLoop->start;
@@ -99,21 +104,23 @@ try{
 
 $client = client();
 
-my $payload = { key => 'value' };
+my $req_payload = { form => { key => 'value' } };
 
-$data = $client->post($payload);
+$data = $client->post($req_payload);
 ok $data, 'got data';
-is_deeply $data->{_req}{payload}{json}, $payload, 'request json payload';
-is $data->{_req}{method}, 'POST', 'request method';
-is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'post', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+is_deeply $payload, $req_payload, 'payload';
 
-$client->post($payload, sub{
+$client->post($req_payload, sub{
   my ($err, $data) = @_;
   ok !$err, 'get no error';
   ok $data, 'get data';
-  is_deeply $data->{_req}{payload}{json}, $payload, 'request json payload';
-  is $data->{_req}{method}, 'POST', 'request method';
-  is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+  my ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'post', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+  is_deeply $payload, $req_payload, 'payload';
   Mojo::IOLoop->stop;
 });
 Mojo::IOLoop->start;
