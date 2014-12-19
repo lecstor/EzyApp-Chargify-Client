@@ -16,20 +16,91 @@ ok $client, 'new api';
 
 # list subscriptions
 
+$client->user_agent->res->json([{ subscription => {}}]);
+
 my $data = $client->list();
-is $data->{_req}{method}, 'GET', 'request method';
-is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+
+my ($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+is $payload, undef, 'no payload';
 
 $data = $client->list(2, 10);
-is $data->{_req}{method}, 'GET', 'request method';
-is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=2&per_page=10', 'request url';
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=2&per_page=10', 'request url';
+is $payload, undef, 'no payload';
 
+$client->list(sub{
+  my ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+  is $payload, undef, 'no payload';
+});
+
+$client->user_agent->res->json([]);
+
+$data = $client->list();
+
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+is $payload, undef, 'no payload';
+
+$client->list(sub{
+  my ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+  is $payload, undef, 'no payload';
+});
+
+$client->user_agent->res->json(undef);
+
+$data = $client->list();
+
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+is $payload, undef, 'no payload';
+
+$client->list(sub{
+  my ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+  is $payload, undef, 'no payload';
+});
 
 # single subscription
 
+$client->user_agent->res->json({ subscription => {}});
+
 $data = $client->single('bogus_id');
-is $data->{_req}{method}, 'GET', 'request method';
-is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id.json', 'request url';
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id.json', 'request url';
+is $payload, undef, 'no payload';
+
+$client->single('bogus_id', sub{
+  ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id.json', 'request url';
+  is $payload, undef, 'no payload';
+});
+
+$client->user_agent->res->json(undef);
+
+$data = $client->single('bogus_id');
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id.json', 'request url';
+is $payload, undef, 'no payload';
+
+$client->single('bogus_id', sub{
+  ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id.json', 'request url';
+  is $payload, undef, 'no payload';
+});
 
 # components
 
@@ -48,9 +119,48 @@ is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com/subscription
 #   }
 # ]
 
+$client->user_agent->res->json([{ component => { component_id => 1 }}]);
+
 $data = $client->components('bogus_id');
-is $data->{_req}{method}, 'GET', 'request method';
-is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id/components.json', 'request url';
+is_deeply $data, [{ id => 1 }], 'response data';
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id/components.json', 'request url';
+is $payload, undef, 'no payload';
+
+
+$client->user_agent->res->json([{ component => { component_id => 1 }}]);
+
+$client->components('bogus_id', sub{
+  my ($err, $data) = @_;
+  is_deeply $data, [{ id => 1 }], 'response data';
+  ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id/components.json', 'request url';
+  is $payload, undef, 'no payload';
+});
+
+
+for my $json ([], undef){
+  $client->user_agent->res->json($json);
+
+  $data = $client->components('bogus_id');
+  is $data, undef, 'response data';
+  ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id/components.json', 'request url';
+  is $payload, undef, 'no payload';
+
+  $client->components('bogus_id', sub{
+    my ($err, $data) = @_;
+    is $data, undef, 'response data';
+    ($method, $url, $payload) = @{$client->last_request};
+    is $method, 'get', 'request method';
+    is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/bogus_id/components.json', 'request url';
+    is $payload, undef, 'no payload';
+  });
+}
+
 
 # print Data::Dumper->Dumper($events);
 
