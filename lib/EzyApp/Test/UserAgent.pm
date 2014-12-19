@@ -2,7 +2,7 @@ package EzyApp::Test::UserAgent::Res;
 use Moose;
 
 has json => (
-  is => 'ro', isa => 'Maybe[HashRef|ArrayRef]',
+  is => 'rw', isa => 'Maybe[HashRef|ArrayRef]',
   default => sub{ { _req => {} } }
 );
 
@@ -15,14 +15,14 @@ package EzyApp::Test::UserAgent::TX;
 use Moose;
 
 has error => (
-  is => 'ro', isa => 'Maybe[HashRef]',
+  is => 'rw', isa => 'Maybe[HashRef]',
   # default => sub {
   #   { code => '500', message => 'Test Server Error' }
   # }
 );
 
 has res => (
-  is => 'ro', isa => 'Object',
+  is => 'rw', isa => 'Object',
   default => sub{ EzyApp::Test::UserAgent::Res->new() }
 );
 
@@ -35,12 +35,12 @@ package EzyApp::Test::UserAgent;
 use Moose;
 
 has tx => (
-  is => 'ro', isa => 'Maybe[Object]',
+  is => 'rw', isa => 'Maybe[Object]',
   default => sub{ EzyApp::Test::UserAgent::TX->new(res => shift->res) },
 );
 
 has res => (
-  is => 'ro', isa => 'Maybe[Object]',
+  is => 'rw', isa => 'Maybe[Object]',
   default => sub{ EzyApp::Test::UserAgent::Res->new },
 );
 
