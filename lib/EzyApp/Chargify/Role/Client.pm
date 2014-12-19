@@ -47,6 +47,9 @@ has debug_on => (
     default => 0,
 );
 
+has last_request => ( is => 'rw', isa => 'ArrayRef' );
+
+
 sub _builder_base_url{
     my ($self) = @_;
     return sprintf 'https://%s', $self->api_host;
@@ -68,7 +71,7 @@ sub _request{
   my @args = ($url);
   push(@args, %$payload) if $payload;
 
-  $self->debug(['_request', $method, $url, $payload]);
+  $self->last_request([$method, $url, $payload]);
 
   if ($callback){
     $self->user_agent->$method(@args, sub{
