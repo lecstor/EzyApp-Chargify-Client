@@ -74,21 +74,49 @@ sub _request{
   $self->last_request([$method, $url, $payload]);
 
   if ($callback){
-    $self->user_agent->$method(@args, sub{
+    $self->_attempt_request(0,$method,@args, sub{
+    # $self->user_agent->$method(@args, sub{
       my ($ua, $tx) = @_;
       $callback->($tx->error, $tx->res->json());
     });
   } else {
-    my $tx = $self->user_agent->$method(@args);
-    my $res = $tx->res;
+    my $tx = $self->_attempt_request(0,$method,@args);
     if (my $err = $tx->error){
       die "$err->{code} $err->{message}\n" if $err->{code};
       die "Connection error: $err->{message}\n";
     } else {
-      return $res->json();
+      return $tx->res->json();
     }
   }
 }
+
+sub _attempt_request{
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($self, $attempts, $method, @args) = @_;
+  $attempts++;
+
+  if ($callback){
+    $self->user_agent->$method(@args, sub{
+      my ($ua, $tx) = @_;
+      if ($tx->error && $attempts < 3){
+        sleep(1);
+        return $self->_attempt_request($attempts, $method, @args, $callback);
+      } else {
+        $callback->($ua, $tx);
+      }
+    });
+  } else {
+    my $tx = $self->user_agent->$method(@args);
+    if ($tx->error && $attempts < 3){
+      sleep($attempts);
+      return $self->_attempt_request($attempts, $method, @args)
+    }
+
+    return $tx;
+  }
+
+}
+
 
 sub debug{
     my ($self, $message) = @_;

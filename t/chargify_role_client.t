@@ -43,6 +43,7 @@ ok $client, 'new client';
 # test coverage for debug
 $client->debug_on(1);
 $client->debug({ debug => 'ref' });
+$client->debug('debug string');
 $client->debug_on(0);
 $client->debug('debug string');
 
@@ -82,6 +83,22 @@ try{
 } catch {
   is $_, "404 Test Not Found\n", 'subscription not found'
 }
+
+$client->get(sub{
+  my ($err, $data) = @_;
+  ok $err, 'get no error';
+  is $err->{code}, 404, 'not found code';
+  is $err->{message}, 'Test Not Found', 'not found message';
+
+  # warn Data::Dumper->Dumper($data);
+  # ok !$data, 'get data';
+  my ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com', 'request url';
+  is $payload, undef, 'no payload';
+  Mojo::IOLoop->stop;
+});
+Mojo::IOLoop->start;
 
 
 $client = client(
