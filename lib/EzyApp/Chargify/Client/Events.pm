@@ -10,14 +10,20 @@ with
   $events = $client->list();
 
   $events = $client->list({
-    min_id => 54321, direction => 'asc',
-    limit => 30, page => 3
+    page => 1,
+    per_page => 30,
+    direction => 'desc'
+    since_id => 54321,
+    max_id => 65432,
   });
 
   $client->list(
     {
-      min_id => 54321, direction => 'asc',
-      limit => 30, page => 3
+      page => 1,
+      per_page => 30,
+      direction => 'desc'
+      since_id => 54321,
+      max_id => 65432,
     },
     sub{ my ($err, data) = @_; }
   );
@@ -28,11 +34,19 @@ sub list{
   my $self = shift;
   my $callback = pop if ref $_[-1] eq 'CODE';
   my ($options) = @_;
-  $options ||= {};
-  foreach (qw!page limit min_id max_id direction!){ $options->{$_} ||= '' };
-  my $url = $self->base_url. sprintf '/events.json?page=%s&per_page=%s&since_id=%s&max_id=%s&direction=%s',
-    $options->{page}, $options->{limit}, $options->{min_id}, $options->{max_id}, $options->{direction};
-  return $self->_request('get', $url, $callback);
+  my $url = $self->base_url. sprintf '/events.json';
+
+  if ($callback){
+    return $self->_request('get', $url, { form => $options }, sub{
+      my ($err, $list) = @_;
+      $callback->($err, ($list && @$list) ? [map{ $_->{event} } @$list] : undef);
+    });
+  } else {
+    my $list = $self->_request('get', $url, { form => $options });
+    return unless $list && @$list;
+    return [map{ $_->{event} } @$list];
+  }
+
 }
 
 no Moose;

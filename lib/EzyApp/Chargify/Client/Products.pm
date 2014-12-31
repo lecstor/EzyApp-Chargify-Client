@@ -56,12 +56,16 @@ sub list{
 
   my $url = $self->base_url. '/products.json';
 
-  return [map{ $_->{product} } @{$self->_request('get', $url)}] unless $callback;
-
-  return $self->_request('get', $url, sub{
-    my ($err, $list) = @_;
-    $callback->($err, $list ? [map{ $_->{product} } @$list] : undef);
-  });
+  if ($callback){
+    return $self->_request('get', $url, sub{
+      my ($err, $list) = @_;
+      $callback->($err, $list ? [map{ $_->{product} } @$list] : undef);
+    });
+  } else {
+    my $resp = $self->_request('get', $url);
+    return unless $resp;
+    return [map{ $_->{product} } @$resp];
+  }
 }
 
 no Moose;

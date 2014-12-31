@@ -6,21 +6,30 @@ with
     'EzyApp::Chargify::Role::ClientBasicAuth';
 
 
-=item get_by_id
+=item single
 
-return a document by id
+return a statement by id
 
-    $id = $store->get_by_id($id);
+  $id = $statements->single($id);
 
 =cut
 
-sub get_by_id{
-    my ($self, $id) = @_;
-    my $url = $self->base_url;
-    $url .= sprintf '/statements/%s.json', $id;
-    my $res = $self->user_agent->get($url)->res;
-    return $res if lc($res->message) eq 'ok';
-    return;
+sub single{
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($id) = @_;
+  my $url = $self->base_url. sprintf "/statements/$id.json";
+
+  if ($callback){
+    return $self->_request('get', $url, sub{
+      my ($err, $sub) = @_;
+      $callback->($err, $sub ? $sub->{statement} : undef);
+    });
+  } else {
+    my $sub = $self->_request('get', $url);
+    return $sub ? $sub->{statement} : undef;
+  }
+
 }
 
 no Moose;

@@ -16,21 +16,59 @@ my $client = client();
 
 ok $client, 'new client';
 
-my $data = $client->list({ min_id => 54321, max_id => 12345, direction => 'asc', limit => 30, page => 3 });
-is $data->{_req}{method}, 'GET', 'request method';
-is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com/events.json?page=3&per_page=30&since_id=54321&max_id=12345&direction=asc', 'request url';
+$client->user_agent->res->json([{ event => {}}]);
+
+my $data = $client->list({ min_id => 54321, max_id => 12345, direction => 'asc', per_page => 30, page => 3 });
+
+my ($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/events.json', 'request url';
+
+# warn Dumper($payload);
+is_deeply $payload, { form => {
+  page => 3, per_page => 30, min_id => 54321, max_id => 12345, direction => 'asc'
+}}, 'payload';
 
 
-$client->list(sub{
+$client->list({ min_id => 54321, max_id => 12345, direction => 'asc', per_page => 30, page => 3 }, sub{
   my ($err, $data) = @_;
   ok !$err, 'list no error';
   ok $data, 'list data';
-  is $data->{_req}{method}, 'GET', 'request method';
-  is $data->{_req}{url}, 'https://bogus-api-key:x@ezyapp.chargify.com/events.json?page=&per_page=&since_id=&max_id=&direction=', 'request url';
+
+  my ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/events.json', 'request url';
+
+  is_deeply $payload, { form => {
+    page => 3, per_page => 30, min_id => 54321, max_id => 12345, direction => 'asc'
+  }}, 'payload';
+
   Mojo::IOLoop->stop;
 });
 Mojo::IOLoop->start;
 
+$client->user_agent->res->json(undef);
+
+$data = $client->list(
+  { min_id => 54321, max_id => 12345, direction => 'asc', per_page => 30, page => 3 },
+  sub{
+    my ($err, $data) = @_;
+    ok !$err, 'list no error';
+    is_deeply $data, undef, 'empty response';
+    Mojo::IOLoop->stop;
+  }
+);
+Mojo::IOLoop->start;
+
+
+# my ($method, $url, $payload) = @{$client->last_request};
+# is $method, 'get', 'request method';
+# is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/events.json', 'request url';
+
+# # warn Dumper($payload);
+# is_deeply $payload, { form => {
+#   page => 3, per_page => 30, min_id => 54321, max_id => 12345, direction => 'asc'
+# }}, 'payload';
 
 # print Data::Dumper->Dumper($events);
 

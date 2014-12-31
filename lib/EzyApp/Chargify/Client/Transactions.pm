@@ -128,49 +128,22 @@ MRR
 
 =cut
 
-sub fetch{
-    my ($self, %args) = @_;
+sub list{
+  my $self = shift;
+  my $callback = pop if ref $_[-1] eq 'CODE';
+  my ($options) = @_;
+  my $url = $self->base_url.'/transactions.json';
 
-    my $direction = $args{direction} || 'asc';
-    my $limit = $args{limit} || 200;
-
-    my $url = $self->_fetch_url($direction, $limit, $args{since_id}, $args{until_id});
-
-    my $res;
-    foreach my $try (1..3){
-        $res = $self->_try_fetch($url, $try);
-        last if $res;
-        $self->debug($res);
-        if ($try < 3){
-            $self->debug("Transactions Fetch: sleep for 30 then try again..");
-            sleep(30);
-        } else {
-            $self->debug("Transactions Fetch: monumental fail!\n");
-        }
-    }
-
-    $self->response($res);
-
-    return $res->json();
-}
-
-sub _fetch_url{
-    my ($self, $direction, $limit, $since_id, $until_id) = @_;
-    my $url = $self->base_url;
-    #$url .= sprintf '/transactions.json?direction=%s&per_page=%s&kinds[]=charge&kinds[]=payment', $direction, $limit;
-    $url .= sprintf '/transactions.json?direction=%s&per_page=%s', $direction, $limit;
-    $url .= '&since_id='.$since_id if $since_id;
-    $url .= '&max_id='.$until_id if $until_id;
-    $self->debug("chargify transactions fetch url: $url");
-    return $url;
-}
-
-sub _try_fetch{
-    my ($self, $url) = @_;
-    my $res = $self->user_agent->get($url)->res;
-    $self->debug("Transactions Fetch Message: ".$res->message."\n");
-    return $res if lc($res->message) eq 'ok';
-    return;
+  if ($callback){
+    return $self->_request('get', $url, { form => $options }, sub{
+      my ($err, $list) = @_;
+      $callback->($err, ($list && @$list) ? [map{ $_->{transaction} } @$list] : undef);
+    });
+  } else {
+    my $list = $self->_request('get', $url, { form => $options });
+    return unless $list && @$list;
+    return [map{ $_->{transaction} } @$list];
+  }
 }
 
 

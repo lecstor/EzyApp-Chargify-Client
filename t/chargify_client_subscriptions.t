@@ -19,22 +19,21 @@ ok $client, 'new api';
 $client->user_agent->res->json([{ subscription => {}}]);
 
 my $data = $client->list();
-
 my ($method, $url, $payload) = @{$client->last_request};
 is $method, 'get', 'request method';
-is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json', 'request url';
 is $payload, undef, 'no payload';
 
-$data = $client->list(2, 10);
+$data = $client->list({ page => 2, per_page => 10 });
 ($method, $url, $payload) = @{$client->last_request};
 is $method, 'get', 'request method';
-is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=2&per_page=10', 'request url';
-is $payload, undef, 'no payload';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json', 'request url';
+is_deeply $payload, { form => { page => 2, per_page => 10 }}, 'payload';
 
 $client->list(sub{
   my ($method, $url, $payload) = @{$client->last_request};
   is $method, 'get', 'request method';
-  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json', 'request url';
   is $payload, undef, 'no payload';
 });
 
@@ -44,13 +43,13 @@ $data = $client->list();
 
 ($method, $url, $payload) = @{$client->last_request};
 is $method, 'get', 'request method';
-is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json', 'request url';
 is $payload, undef, 'no payload';
 
 $client->list(sub{
   my ($method, $url, $payload) = @{$client->last_request};
   is $method, 'get', 'request method';
-  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json', 'request url';
   is $payload, undef, 'no payload';
 });
 
@@ -60,13 +59,13 @@ $data = $client->list();
 
 ($method, $url, $payload) = @{$client->last_request};
 is $method, 'get', 'request method';
-is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json', 'request url';
 is $payload, undef, 'no payload';
 
 $client->list(sub{
   my ($method, $url, $payload) = @{$client->last_request};
   is $method, 'get', 'request method';
-  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json?page=1&per_page=200', 'request url';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions.json', 'request url';
   is $payload, undef, 'no payload';
 });
 
@@ -161,6 +160,45 @@ for my $json ([], undef){
   });
 }
 
+
+
+$client->user_agent->res->json([{ event => { id => 987654321 }}]);
+
+$data = $client->events(987654321);
+is_deeply $data, [{ id => 987654321 }], 'response data';
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/987654321/events.json', 'request url';
+is_deeply $payload, {'form' => undef }, 'no payload';
+# warn Dumper($payload);
+
+$client->events(987654321, sub{
+  my ($err, $data) = @_;
+  is_deeply $data, [{ id => 987654321 }], 'response data';
+  ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/987654321/events.json', 'request url';
+  is_deeply $payload, {'form' => undef }, 'no payload';
+});
+
+$client->user_agent->res->json(undef);
+
+$data = $client->events(987654321);
+is $data, undef, 'response data';
+($method, $url, $payload) = @{$client->last_request};
+is $method, 'get', 'request method';
+is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/987654321/events.json', 'request url';
+is_deeply $payload, {'form' => undef }, 'no payload';
+# warn Dumper($payload);
+
+$client->events(987654321, sub{
+  my ($err, $data) = @_;
+  is $data, undef, 'response data';
+  ($method, $url, $payload) = @{$client->last_request};
+  is $method, 'get', 'request method';
+  is $url, 'https://bogus-api-key:x@ezyapp.chargify.com/subscriptions/987654321/events.json', 'request url';
+  is_deeply $payload, {'form' => undef }, 'no payload';
+});
 
 # print Data::Dumper->Dumper($events);
 
