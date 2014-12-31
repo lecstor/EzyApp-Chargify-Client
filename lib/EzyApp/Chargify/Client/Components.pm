@@ -22,12 +22,17 @@ sub list{
 
   my $url = $self->base_url. sprintf '/product_families/%s/components.json', $product_family_id;
 
-  return [map{ $_->{component} } @{$self->_request('get', $url, $params)}] unless $callback;
+  if ($callback){
+    return $self->_request('get', $url, $params, sub{
+      my ($err, $list) = @_;
+      $callback->($err, $list ? [map{ $_->{component} } @$list] : undef);
+    });
+  } else {
+    my $resp = $self->_request('get', $url, $params);
+    return unless $resp;
+    return [map{ $_->{component} } @$resp];
+  }
 
-  return $self->_request('get', $url, $params, sub{
-    my ($err, $list) = @_;
-    $callback->($err, $list ? [map{ $_->{component} } @$list] : undef);
-  });
 }
 
 
